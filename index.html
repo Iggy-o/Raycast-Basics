@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<title>repl.it</title>
+		<link href="style.css" rel="stylesheet" type="text/css" />
+	</head>
+  <style>
+    body{
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+	<body>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
+		<script src="script.js"></script>
+    <script>
+      let numberOfBarricades = 5, barricades = [], playerSpeed = 5, linesPerAngle = 1
+      let x1 = window.innerWidth/2, y1 = window.innerHeight/2, x2, y2 
+
+      function setup() {
+        //Create a canvas the size of the window
+        createCanvas(windowWidth, windowHeight);
+        //Create a bunch of random barricades
+        for (let i = 0; i < numberOfBarricades; i++) {
+          barricades.push(new createLine())
+        }
+        //Create Horizontal Barricades (Top and Bottom)
+        barricades.push(new createWall(-1, 0, windowWidth+1, 0.01))
+        barricades.push(new createWall(-1, windowHeight+1, windowWidth+2,windowHeight+1.01))
+        //Create Vertical Barricades (Left and Right)
+        barricades.push(new createWall(-1, -1, -1.01, windowHeight+1))
+        barricades.push(new createWall(windowWidth+1, -1, windowWidth+1.01, windowHeight+2))
+        //Set all line strokes to 1
+        stroke('white')
+      }
+
+      function createLine() {
+        this.x1 = random(windowWidth)
+        this.y1 = random(windowHeight)
+        this.x2 = random(windowWidth)
+        this.y2 = random(windowHeight)
+      }
+
+      function createWall(x1, y1, x2, y2) {
+        this.x1 = x1
+        this.y1 = y1
+        this.x2 = x2
+        this.y2 = y2
+      }
+
+
+      function draw() {
+        background('black');
+        x1 = mouseX
+        y1 = mouseY
+        for (let i = 0; i < 360; i+=linesPerAngle) {
+          let v = p5.Vector.fromAngle(radians(i));
+          x2 = v.x*100000;
+          y2 = v.y*100000;
+          maxDistance = Infinity
+          for (let i = 0; i < barricades.length; i++) {
+            let s = barricades[i]
+            strokeWeight(2)
+            line(s.x1, s.y1, s.x2, s.y2)
+            f_equation = equation(x1, y1, x2, y2)
+            s_equation = equation(s.x1, s.y1, s.x2, s.y2)
+            intersect = doesIntersect(f_equation[0], f_equation[1], s_equation[0], s_equation[1])
+            intersectWithX = round(intersect[0])
+            intersectWithY = round(intersect[1])
+            f_lineCheck = doesTouchLine(x1, y1, x2, y2)
+            s_lineCheck = doesTouchLine(s.x1, s.y1, s.x2, s.y2)
+            distanceToLine = dist(x1, y1, x, y)
+            if (f_lineCheck && s_lineCheck && distanceToLine < maxDistance) {
+              maxDistance = distanceToLine
+              closestX = intersectWithX
+              closestY = intersectWithY
+            }
+          }
+          if (maxDistance != Infinity) {
+            stroke(255, 10)
+            strokeWeight(10)
+            line(x1, y1, closestX, closestY)
+          }
+        }
+      }
+
+      function equation(x1, y1, x2, y2) {
+        let m = (y2 - y1) / (x2 - x1)
+        let b = y1 - (m * x1)
+        return [m, b]
+      }
+
+      function doesIntersect(m1, b1, m2, b2) {
+        x = (b2 - b1) / (m1 - m2)
+        y = m1 * x + b1
+        return [x, y]
+      }
+
+      function doesTouchLine(x1, y1, x2, y2) {
+        return max(y1, y2) >= y && y >= min(y1, y2) && max(x1, x2) >= x && x >= min(x1, x2)
+      }
+    </script>
+	</body>
+</html>
